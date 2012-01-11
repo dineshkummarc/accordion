@@ -53,6 +53,7 @@ Accordion.prototype = {
 				height: null,
 				width: null
 			},
+			defaultToClosed: true,
 			direction: 'vertical',
 			onEvent: 'click',
 			afterComplete: function(){},
@@ -65,10 +66,19 @@ Accordion.prototype = {
 			if (this.options.onEvent == 'click') {
 			  accordion.onclick = function() {return false;};
 			}
+
+			var size = '0px';
+			var display = 'none';
+
+			if( ! this.options.defaultToClosed) {
+				size = 'auto';
+				display = 'block';
+			}
+
 			if (this.options.direction == 'horizontal') {
-				var options = {width: '0px', display: 'none'};
+				var options = {width: size, display: display};
 			} else {
-				var options = {height: '0px', display: 'none'};
+				var options = {height: size, display: display};
 			}
 			this.currentAccordion = $(accordion.next(0)).setStyle(options);
 		}.bind(this));
@@ -84,10 +94,27 @@ Accordion.prototype = {
 		}
 		this.effects = [];
 		this.currentAccordion = $(accordion.next(0));
-		this.currentAccordion.setStyle({
-			display: 'block'
-		});
-		this.currentAccordion.previous(0).addClassName(this.options.classNames.toggleActive);
+
+		if( ! this.options.defaultToClosed) {
+			if( ! this.currentAccordion.visible()) {
+				if (this.options.direction == 'horizontal') {
+					var options = {width: '0px', display: 'block'};
+				} else {
+					var options = {height: '0px', display: 'block'};
+				}
+				this.currentAccordion.setStyle(options);
+			}
+
+			else {
+				this.showAccordion = this.currentAccordion;
+			}
+		}
+		else {
+			this.currentAccordion.setStyle({
+				display: 'block'
+			});
+		}
+
 		if (this.options.direction == 'horizontal') {
 			this.scaling = $H({
 				scaleX: true,
@@ -157,6 +184,11 @@ Accordion.prototype = {
 			}
 		});
 		options.merge(this.scaling);
+
+		if( ! this.options.defaultToClosed && this.currentAccordion.visible()) {
+			options.scaleFrom = 0;
+		}
+
 		this.effects.push(
 			new Effect.Scale(this.currentAccordion, 100, options.update(this.scaling).toObject())
 		);
